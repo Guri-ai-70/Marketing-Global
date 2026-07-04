@@ -1,3 +1,3 @@
 # Marketing-Global 
 Buying Products 
-A cross-platform shopping recommendation site that helps you find the right product across Amazon, eBay, and AliExpress.
+A cross-platform shopping recommendation site for products on Amazon, eBay, and AliExpress.
