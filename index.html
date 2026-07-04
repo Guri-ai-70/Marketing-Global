@@ -141,19 +141,18 @@
   .handoff p{margin:0 0 14px;color:var(--ink-soft);font-size:14px}
   .platforms{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .plat{
-    border:1px solid var(--line);border-radius:10px;padding:10px 14px;
-    font-weight:600;color:var(--ink);background:var(--card);display:flex;gap:9px;align-items:center;
-    font-size:14px;cursor:pointer;user-select:none;transition:border-color .15s ease, background .15s ease
+    border:1px solid var(--line);border-radius:10px;padding:11px 18px;
+    font-weight:600;color:var(--ink);background:var(--card);
+    font-size:14px;cursor:pointer;user-select:none;transition:border-color .15s ease, background .15s ease, color .15s ease
   }
   .plat:hover{border-color:var(--coral)}
-  .plat input{width:16px;height:16px;accent-color:var(--coral);cursor:pointer;margin:0}
-  .plat.checked{border-color:var(--coral);background:#fff4ef}
+  .plat.checked{border-color:var(--coral);background:var(--coral);color:#fff}
+  .plat.checked::before{content:"✓ ";font-weight:700}
   .open-sel{
     border:none;cursor:pointer;font:inherit;font-weight:600;border-radius:10px;
-    padding:11px 20px;background:var(--coral);color:#fff;transition:background .15s ease
+    padding:11px 20px;background:var(--ink);color:#fff;transition:background .15s ease
   }
-  .open-sel:hover{background:var(--coral-dk)}
-  .open-sel:disabled{background:#d8ccbb;cursor:not-allowed}
+  .open-sel:hover{background:#0c1828}
 
   .empty{color:var(--ink-soft);padding:30px;text-align:center;border:1px dashed var(--line);border-radius:var(--radius)}
 
@@ -251,7 +250,7 @@
 
     <div class="handoff">
       <h3>Want more options?</h3>
-      <p>Tick the stores you want, then open them all at once for <strong id="handoffTerm">your search</strong>. Your affiliate tag attaches automatically once programs are approved.</p>
+      <p>Click the stores you want (they highlight when selected), then open them all at once for <strong id="handoffTerm">your search</strong>. Your affiliate tag attaches automatically once programs are approved.</p>
       <div class="platforms" id="platforms"></div>
       <p id="popupNote" hidden style="margin:12px 0 0;font-size:12.5px;color:var(--ink-soft)">Opening several stores? If some tabs don't appear, click the pop-up icon in your browser's address bar and allow pop-ups for this site.</p>
     </div>
@@ -421,41 +420,34 @@
     if(cat === "Computers" || cat === "Mobile"){
       stores = stores.filter(s => s !== "AliExpress");
     }
-    // build each store as a checkbox label; store its live URL on the checkbox
-    const labels = stores.map(s => {
+    // Plain toggle buttons — NO checkbox elements, so nothing can auto-select them.
+    // Each starts OFF (not selected). Clicking toggles selection.
+    const btns = stores.map(s => {
       const url = linkFor(s, term, minP, maxP);
-      return `<label class="plat"><input type="checkbox" data-url="${url}">${s}</label>`;
+      return `<button type="button" class="plat" data-url="${url}" data-on="0">${s}</button>`;
     }).join("");
-    $("platforms").innerHTML = labels +
+    $("platforms").innerHTML = btns +
       `<button type="button" class="open-sel" id="openSel">Open selected ↗</button>`;
 
     const box = $("platforms");
-    // reflect checked state on the label chip; force unticked on load
-    box.querySelectorAll(".plat input").forEach(cb => {
-      cb.checked = false; // guarantee empty by default
-      const sync = () => cb.closest(".plat").classList.toggle("checked", cb.checked);
-      sync();
-      cb.addEventListener("change", sync);
+    // toggle a store on/off when its button is clicked
+    box.querySelectorAll(".plat").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const on = btn.dataset.on === "1";
+        btn.dataset.on = on ? "0" : "1";
+        btn.classList.toggle("checked", !on);
+      });
     });
-    // open every ticked store in its own tab
+    // open every selected store
     $("openSel").addEventListener("click", () => {
-      const urls = [...box.querySelectorAll(".plat input:checked")].map(cb => cb.dataset.url);
-      if(!urls.length){ alert("Tick at least one store first."); return; }
-      // Use real anchor clicks (not window.open loops) so browsers treat each
-      // as a user-initiated navigation and don't block the extra tabs.
-      let blocked = false;
-      urls.forEach((u, i) => {
+      const urls = [...box.querySelectorAll('.plat[data-on="1"]')].map(b => b.dataset.url);
+      if(!urls.length){ alert("Click at least one store first."); return; }
+      urls.forEach(u => {
         const a = document.createElement("a");
         a.href = u; a.target = "_blank"; a.rel = "noopener";
-        document.body.appendChild(a);
-        try { a.click(); } catch(e){ blocked = true; }
-        document.body.removeChild(a);
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
       });
-      // Fallback note if the browser still suppressed some tabs
-      const note = $("popupNote");
-      if(urls.length > 1){
-        note.hidden = false;
-      }
+      if(urls.length > 1){ $("popupNote").hidden = false; }
     });
   }
 
