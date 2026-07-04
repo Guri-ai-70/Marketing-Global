@@ -253,6 +253,7 @@
       <h3>Want more options?</h3>
       <p>Tick the stores you want, then open them all at once for <strong id="handoffTerm">your search</strong>. Your affiliate tag attaches automatically once programs are approved.</p>
       <div class="platforms" id="platforms"></div>
+      <p id="popupNote" hidden style="margin:12px 0 0;font-size:12.5px;color:var(--ink-soft)">Opening several stores? If some tabs don't appear, click the pop-up icon in your browser's address bar and allow pop-ups for this site.</p>
     </div>
   </section>
 
@@ -423,14 +424,15 @@
     // build each store as a checkbox label; store its live URL on the checkbox
     const labels = stores.map(s => {
       const url = linkFor(s, term, minP, maxP);
-      return `<label class="plat"><input type="checkbox" data-url="${url}" checked>${s}</label>`;
+      return `<label class="plat"><input type="checkbox" data-url="${url}">${s}</label>`;
     }).join("");
     $("platforms").innerHTML = labels +
       `<button type="button" class="open-sel" id="openSel">Open selected ↗</button>`;
 
     const box = $("platforms");
-    // reflect checked state on the label chip
+    // reflect checked state on the label chip; force unticked on load
     box.querySelectorAll(".plat input").forEach(cb => {
+      cb.checked = false; // guarantee empty by default
       const sync = () => cb.closest(".plat").classList.toggle("checked", cb.checked);
       sync();
       cb.addEventListener("change", sync);
@@ -439,7 +441,21 @@
     $("openSel").addEventListener("click", () => {
       const urls = [...box.querySelectorAll(".plat input:checked")].map(cb => cb.dataset.url);
       if(!urls.length){ alert("Tick at least one store first."); return; }
-      urls.forEach(u => window.open(u, "_blank", "noopener"));
+      // Use real anchor clicks (not window.open loops) so browsers treat each
+      // as a user-initiated navigation and don't block the extra tabs.
+      let blocked = false;
+      urls.forEach((u, i) => {
+        const a = document.createElement("a");
+        a.href = u; a.target = "_blank"; a.rel = "noopener";
+        document.body.appendChild(a);
+        try { a.click(); } catch(e){ blocked = true; }
+        document.body.removeChild(a);
+      });
+      // Fallback note if the browser still suppressed some tabs
+      const note = $("popupNote");
+      if(urls.length > 1){
+        note.hidden = false;
+      }
     });
   }
 
