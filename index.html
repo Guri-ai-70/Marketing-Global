@@ -58,6 +58,32 @@
   .hero h1 .u{background:linear-gradient(transparent 62%, #f6d2c5 62%)}
   .hero p.sub{color:var(--ink-soft);max-width:60ch;margin:0;font-size:16px}
 
+  /* ---- Sale of the week ---- */
+  .sale{margin:22px 0 6px}
+  .sale-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .sale-head h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0}
+  .sale-note{color:var(--ink-soft);font-size:13px}
+  .deals{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+  .deal{
+    position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)
+  }
+  .deal .badge{
+    position:absolute;top:10px;left:10px;background:var(--coral);color:#fff;font-weight:600;
+    font-size:12px;padding:4px 9px;border-radius:20px;letter-spacing:.02em
+  }
+  .deal .thumb{height:120px;display:flex;align-items:center;justify-content:center;font-size:40px;
+    background:linear-gradient(135deg,#fdeee6,#f6e3d4)}
+  .deal .body{padding:13px 13px 15px;display:flex;flex-direction:column;gap:7px;flex:1}
+  .deal .name{font-weight:600;font-size:14.5px;line-height:1.3}
+  .deal .prices{display:flex;align-items:baseline;gap:8px}
+  .deal .now{font-weight:600;font-size:17px;color:var(--coral-dk)}
+  .deal .was{font-size:13px;color:var(--ink-soft);text-decoration:line-through}
+  .deal .src{font-size:11.5px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .deal .grab{margin-top:auto;text-align:center;text-decoration:none;font-weight:600;font-size:13.5px;
+    background:var(--coral);color:#fff;padding:9px;border-radius:9px}
+  .deal .grab:hover{background:var(--coral-dk)}
+
   /* ---- Finder panel ---- */
   .panel{
     margin:22px 0 10px;background:var(--card);border:1px solid var(--line);
@@ -113,13 +139,21 @@
   .handoff{margin-top:30px;background:#fffdf8;border:1px dashed var(--line);border-radius:var(--radius);padding:20px}
   .handoff h3{font-family:var(--display);font-weight:600;margin:0 0 4px;font-size:18px}
   .handoff p{margin:0 0 14px;color:var(--ink-soft);font-size:14px}
-  .platforms{display:flex;gap:10px;flex-wrap:wrap}
+  .platforms{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .plat{
-    text-decoration:none;border:1px solid var(--line);border-radius:10px;padding:11px 16px;
-    font-weight:600;color:var(--ink);background:var(--card);display:flex;gap:8px;align-items:center;font-size:14px
+    border:1px solid var(--line);border-radius:10px;padding:10px 14px;
+    font-weight:600;color:var(--ink);background:var(--card);display:flex;gap:9px;align-items:center;
+    font-size:14px;cursor:pointer;user-select:none;transition:border-color .15s ease, background .15s ease
   }
-  .plat:hover{border-color:var(--coral);color:var(--coral-dk)}
-  .plat .dot{width:8px;height:8px;border-radius:50%;background:var(--coral)}
+  .plat:hover{border-color:var(--coral)}
+  .plat input{width:16px;height:16px;accent-color:var(--coral);cursor:pointer;margin:0}
+  .plat.checked{border-color:var(--coral);background:#fff4ef}
+  .open-sel{
+    border:none;cursor:pointer;font:inherit;font-weight:600;border-radius:10px;
+    padding:11px 20px;background:var(--coral);color:#fff;transition:background .15s ease
+  }
+  .open-sel:hover{background:var(--coral-dk)}
+  .open-sel:disabled{background:#d8ccbb;cursor:not-allowed}
 
   .empty{color:var(--ink-soft);padding:30px;text-align:center;border:1px dashed var(--line);border-radius:var(--radius)}
 
@@ -142,6 +176,15 @@
   <section class="hero">
     <h1>Tell us the need. We find the <span class="u">right thing</span>, across every store.</h1>
     <p class="sub">Describe who it's for and what matters to you. We suggest picks and send you straight to the best matches on Amazon, eBay and AliExpress — one search, every shelf.</p>
+  </section>
+
+  <!-- SALE OF THE WEEK -->
+  <section class="sale" aria-label="Sale of the week">
+    <div class="sale-head">
+      <h2>Sale of the week</h2>
+      <span class="sale-note">Hand-picked deals — refreshed weekly</span>
+    </div>
+    <div class="deals" id="deals"></div>
   </section>
 
   <!-- FINDER -->
@@ -208,7 +251,7 @@
 
     <div class="handoff">
       <h3>Want more options?</h3>
-      <p>See live results for <strong id="handoffTerm">your search</strong> on each store. Your affiliate tag attaches automatically once programs are approved.</p>
+      <p>Tick the stores you want, then open them all at once for <strong id="handoffTerm">your search</strong>. Your affiliate tag attaches automatically once programs are approved.</p>
       <div class="platforms" id="platforms"></div>
     </div>
   </section>
@@ -243,6 +286,44 @@
     {name:"Skincare Gift Trio", emoji:"🧴", price:33, cat:"Health & Beauty", src:"eBay", ship:"fast",
      why:"Cleanser, serum, moisturizer in a giftable box.", url:"#"}
   ];
+
+  // ============================================================
+  //  SALE OF THE WEEK  — EDIT THIS LIST EACH WEEK
+  //  Put in REAL deals you've verified on the store. Fields:
+  //    name = product name
+  //    was  = original price (number)
+  //    now  = sale price (number)        --> % off is calculated for you
+  //    src  = "Amazon" | "eBay" | "AliExpress"
+  //    emoji= a relevant icon
+  //    url  = the real product/affiliate link (paste between the quotes)
+  //  To remove a deal, delete its { ... } block. Keep commas between blocks.
+  // ============================================================
+  const DEALS = [
+    {name:"Wireless Earbuds, ANC", was:79, now:46, src:"Amazon",     emoji:"🎧", url:"#"},
+    {name:"Robot Vacuum Cleaner",  was:199, now:129, src:"eBay",     emoji:"🤖", url:"#"},
+    {name:"14-pc Knife Block Set",  was:60, now:34, src:"Amazon",     emoji:"🔪", url:"#"},
+    {name:"LED Strip Lights 10m",   was:25, now:12, src:"AliExpress", emoji:"💡", url:"#"}
+  ];
+
+  function renderDeals(){
+    const wrap = document.getElementById("deals");
+    if(!DEALS.length){ wrap.innerHTML = ""; return; }
+    wrap.innerHTML = DEALS.map(d => {
+      const off = d.was > 0 ? Math.round((1 - d.now / d.was) * 100) : 0;
+      return `
+      <article class="deal">
+        ${off>0?`<span class="badge">-${off}%</span>`:""}
+        <div class="thumb">${d.emoji}</div>
+        <div class="body">
+          <div class="name">${d.name}</div>
+          <div class="prices"><span class="now">$${d.now}</span><span class="was">$${d.was}</span></div>
+          <div class="src">${d.src}</div>
+          <a class="grab" href="${d.url}" target="_blank" rel="noopener">Grab deal</a>
+        </div>
+      </article>`;
+    }).join("");
+  }
+  renderDeals();
 
   // ---- Platform deep-link builders. AFF tags go here later. ----
   // Replace the empty tag values with your real affiliate IDs when approved.
@@ -339,9 +420,27 @@
     if(cat === "Computers" || cat === "Mobile"){
       stores = stores.filter(s => s !== "AliExpress");
     }
-    $("platforms").innerHTML = stores.map(s =>
-      `<a class="plat" href="${linkFor(s, term, minP, maxP)}" target="_blank" rel="noopener"><span class="dot"></span>See on ${s}</a>`
-    ).join("");
+    // build each store as a checkbox label; store its live URL on the checkbox
+    const labels = stores.map(s => {
+      const url = linkFor(s, term, minP, maxP);
+      return `<label class="plat"><input type="checkbox" data-url="${url}" checked>${s}</label>`;
+    }).join("");
+    $("platforms").innerHTML = labels +
+      `<button type="button" class="open-sel" id="openSel">Open selected ↗</button>`;
+
+    const box = $("platforms");
+    // reflect checked state on the label chip
+    box.querySelectorAll(".plat input").forEach(cb => {
+      const sync = () => cb.closest(".plat").classList.toggle("checked", cb.checked);
+      sync();
+      cb.addEventListener("change", sync);
+    });
+    // open every ticked store in its own tab
+    $("openSel").addEventListener("click", () => {
+      const urls = [...box.querySelectorAll(".plat input:checked")].map(cb => cb.dataset.url);
+      if(!urls.length){ alert("Tick at least one store first."); return; }
+      urls.forEach(u => window.open(u, "_blank", "noopener"));
+    });
   }
 
   $("findBtn").addEventListener("click", search);
