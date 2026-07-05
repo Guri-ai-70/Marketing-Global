@@ -3,7 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marketing Global — find what fits you</title>
+<title>Marketing Global — Compare Amazon, eBay &amp; AliExpress in seconds</title>
+<meta name="description" content="Marketing Global helps you search once and compare products across Amazon, eBay and AliExpress. Save time, find better prices, and shop with confidence.">
+<!-- Open Graph / social sharing -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Marketing Global — Compare Amazon, eBay &amp; AliExpress">
+<meta property="og:description" content="Search once. Compare Amazon, eBay and AliExpress in seconds. Save time, find better prices, shop with confidence.">
+<meta property="og:url" content="https://guri-ai-70.github.io/Marketing-Global/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Marketing Global — Compare Amazon, eBay &amp; AliExpress">
+<meta name="twitter:description" content="Search once. Compare Amazon, eBay and AliExpress in seconds.">
+<!-- Inline SVG favicon (a blue shopping tag) — fixes the favicon 404, no extra file needed -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232E75B6'/><text x='50' y='68' font-size='58' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>M</text></svg>">
 <style>
   /* ---- Design tokens ----
      Concept: a calm "concierge desk" feel, not a loud marketplace.
@@ -40,7 +51,9 @@
   .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
 
   /* ---- Header ---- */
-  header.top{padding:30px 0 8px}
+  header.top{position:sticky;top:0;z-index:50;padding:16px 0 12px;
+    background:rgba(243,237,225,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line)}
   .brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
   .brand .mark{
     font-family:var(--display);font-weight:900;font-size:clamp(24px,4.5vw,40px);
@@ -58,7 +71,36 @@
   .hero h1 .u{background:linear-gradient(transparent 62%, #f6d2c5 62%)}
   .hero p.sub{color:var(--ink-soft);max-width:60ch;margin:0;font-size:16px}
 
-  /* ---- Sale of the week ---- */
+  /* ---- Popular categories ---- */
+  .popcats{margin:26px 0 6px}
+  .catgrid{display:flex;flex-wrap:wrap;gap:10px}
+  .catchip{
+    border:1px solid var(--line);background:var(--card);border-radius:30px;padding:10px 16px;
+    font:inherit;font-weight:600;font-size:14px;color:var(--ink);cursor:pointer;
+    transition:border-color .15s ease, background .15s ease
+  }
+  .catchip:hover{border-color:#2E75B6;background:#f4f8fc}
+
+  /* ---- Why shop with us ---- */
+  .why{margin:34px 0 10px}
+  .whygrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+  .whyitem{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 18px;box-shadow:var(--shadow)}
+  .whyitem .whyicon{font-size:30px;display:block;margin-bottom:8px}
+  .whyitem h3{font-family:var(--display);font-weight:600;font-size:17px;margin:0 0 6px}
+  .whyitem p{margin:0;font-size:13.5px;color:var(--ink-soft);line-height:1.5}
+
+  /* ---- Weekly deal-store buttons ---- */
+  .dealstores{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .dealstore{
+    text-decoration:none;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 18px;display:flex;flex-direction:column;gap:4px;box-shadow:var(--shadow);
+    transition:border-color .15s ease, transform .05s ease
+  }
+  .dealstore:hover{border-color:#2E75B6;transform:translateY(-2px)}
+  .dealstore .ds-name{font-family:var(--display);font-weight:700;font-size:20px;color:var(--ink)}
+  .dealstore .ds-sub{font-size:13px;color:var(--ink-soft)}
+  .dealstore .ds-go{margin-top:8px;font-weight:600;font-size:14px;color:#2E75B6}
   .sale{margin:22px 0 6px}
   .sale-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
   .sale-head h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0}
@@ -72,8 +114,9 @@
     position:absolute;top:10px;left:10px;background:var(--coral);color:#fff;font-weight:600;
     font-size:12px;padding:4px 9px;border-radius:20px;letter-spacing:.02em
   }
-  .deal .thumb{height:120px;display:flex;align-items:center;justify-content:center;font-size:40px;
-    background:linear-gradient(135deg,#fdeee6,#f6e3d4)}
+  .deal .thumb{height:120px;display:flex;align-items:center;justify-content:center;font-size:64px;
+    overflow:hidden;background:linear-gradient(135deg,#fdeee6,#f6e3d4)}
+  .deal .thumb img{width:100%;height:100%;object-fit:cover;display:block}
   .deal .body{padding:13px 13px 15px;display:flex;flex-direction:column;gap:7px;flex:1}
   .deal .name{font-weight:600;font-size:14.5px;line-height:1.3}
   .deal .prices{display:flex;align-items:baseline;gap:8px}
@@ -121,8 +164,20 @@
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)
   }
-  .card .thumb{height:140px;display:flex;align-items:center;justify-content:center;
-    font-size:46px;background:linear-gradient(135deg,#fbf4e8,#f1e7d4)}
+  .card .thumb{position:relative;height:140px;display:flex;align-items:center;justify-content:center;
+    font-size:72px;overflow:hidden;background:linear-gradient(135deg,#fbf4e8,#f1e7d4)}
+  .card .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .pbadge{position:absolute;top:10px;right:10px;font-size:11px;font-weight:700;
+    padding:4px 9px;border-radius:20px;color:#fff;letter-spacing:.02em;
+    box-shadow:0 2px 6px rgba(0,0,0,.18)}
+  .badge-value{background:#2e7d59}   /* green */
+  .badge-seller{background:#b98a2e}  /* gold */
+  .badge-editor{background:#2E75B6}  /* blue accent */
+  .badge-ship{background:#5a6b7a}    /* slate */
+  .rating{display:flex;align-items:center;gap:6px;font-size:13px;margin:-2px 0 2px}
+  .rating .stars{color:#e0a520;letter-spacing:1px}
+  .rating .rnum{font-weight:600;color:var(--ink)}
+  .rating .rcount{color:var(--ink-soft);font-size:12px}
   .card .body{padding:14px 14px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
   .card .name{font-weight:600;font-size:15.5px;line-height:1.3}
   .card .why{font-size:13px;color:var(--ink-soft);flex:1}
@@ -173,17 +228,51 @@
   </header>
 
   <section class="hero">
-    <h1>Tell us the need.<br>We find the right thing, across every store.</h1>
-    <p class="sub">Describe who it's for and what matters to you. We suggest picks and send you straight to the best matches on Amazon, eBay, AliExpress and Temu — one search, every shelf.</p>
+    <h1>Search once. Compare Amazon, eBay and AliExpress in seconds.</h1>
+    <p class="sub"><strong>Save time. Find better prices. Shop with confidence.</strong> Describe what you're looking for and we send you straight to the best matches across every store.</p>
   </section>
 
-  <!-- SALE OF THE WEEK -->
-  <section class="sale" aria-label="Sale of the week">
+  <!-- WEEKLY DEALS -->
+  <section class="sale" aria-label="Weekly deals">
     <div class="sale-head">
-      <h2>Sale of the week</h2>
-      <span class="sale-note">Hand-picked deals — refreshed weekly</span>
+      <h2>Today's best deals</h2>
+      <span class="sale-note">Jump straight to each store's live deals page</span>
     </div>
-    <div class="deals" id="deals"></div>
+    <div class="dealstores">
+      <a class="dealstore" href="https://www.amazon.com/deals" target="_blank" rel="noopener">
+        <span class="ds-name">Amazon</span>
+        <span class="ds-sub">Today's Deals</span>
+        <span class="ds-go">View deals →</span>
+      </a>
+      <a class="dealstore" href="https://www.ebay.com/deals" target="_blank" rel="noopener">
+        <span class="ds-name">eBay</span>
+        <span class="ds-sub">Daily Deals</span>
+        <span class="ds-go">View deals →</span>
+      </a>
+      <a class="dealstore" href="https://best.aliexpress.com/" target="_blank" rel="noopener">
+        <span class="ds-name">AliExpress</span>
+        <span class="ds-sub">Super Deals</span>
+        <span class="ds-go">View deals →</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- POPULAR CATEGORIES -->
+  <section class="popcats" aria-label="Popular categories">
+    <div class="sale-head">
+      <h2>Popular categories</h2>
+      <span class="sale-note">Tap a category to search it across all stores</span>
+    </div>
+    <div class="catgrid" id="catgrid">
+      <button type="button" class="catchip" data-cat="Electronics">🎧 Electronics</button>
+      <button type="button" class="catchip" data-cat="Home &amp; Kitchen">🍳 Home &amp; Kitchen</button>
+      <button type="button" class="catchip" data-cat="Fashion">👕 Fashion</button>
+      <button type="button" class="catchip" data-cat="Toys &amp; Games">🎲 Toys &amp; Games</button>
+      <button type="button" class="catchip" data-cat="Computers">💻 Computers</button>
+      <button type="button" class="catchip" data-cat="Mobile">📱 Mobile</button>
+      <button type="button" class="catchip" data-cat="Health &amp; Beauty">🧴 Health &amp; Beauty</button>
+      <button type="button" class="catchip" data-cat="Outdoors">🏕️ Outdoors</button>
+    </div>
   </section>
 
   <!-- FINDER -->
@@ -256,78 +345,59 @@
     </div>
   </section>
 
+  <!-- WHY SHOP WITH US -->
+  <section class="why" aria-label="Why shop with us">
+    <div class="sale-head">
+      <h2>Why shop with us?</h2>
+    </div>
+    <div class="whygrid">
+      <div class="whyitem"><span class="whyicon">🔎</span><h3>Search once</h3><p>One search checks Amazon, eBay and AliExpress — no more opening five tabs yourself.</p></div>
+      <div class="whyitem"><span class="whyicon">💰</span><h3>Better prices</h3><p>Compare across stores in seconds and land on the best value for what you need.</p></div>
+      <div class="whyitem"><span class="whyicon">✅</span><h3>Curated picks</h3><p>Our Editor's Choice and Best Value tags help you skip the junk and find what's worth buying.</p></div>
+      <div class="whyitem"><span class="whyicon">🛡️</span><h3>Shop with confidence</h3><p>We link you straight to the official stores — you buy safely on the platform you already trust.</p></div>
+    </div>
+  </section>
+
   <footer>
-    <p class="disc"><strong>Demo notice.</strong> Curated picks below are sample data for layout. The "see more" buttons deep-link into each store's own search (legitimate and policy-safe). As an affiliate, Marketing Global may earn a commission on qualifying purchases — at no extra cost to you. Prices and availability are set by each store.</p>
+    <p class="disc">Marketing Global helps you compare products across Amazon, eBay and AliExpress. As an affiliate, we may earn a commission on qualifying purchases — at no extra cost to you. Prices and availability are set by each store.</p>
   </footer>
 
 </div>
 
 <script>
-  // ---- Sample curated catalog (you replace these with real picks + your affiliate links) ----
+  // ---- Curated catalog. Replace with real picks, real links, real image URLs. ----
+  //  Each product can have: name, price, cat, src, ship, why, url (affiliate link),
+  //  and img (paste a real product photo URL — use ONLY images you're allowed to use,
+  //  e.g. from the affiliate program's image feed or your own photos).
+  //  If img is left out or "", a fallback emoji/icon shows instead.
+  //  Optional badge: "value" (Best Value), "seller" (Best Seller), "editor" (Editor's Choice).
+  //  Leave badge out for no tag.
   const CATALOG = [
-    {name:"Wooden Travel Chess Set", emoji:"♟️", price:24, cat:"Toys & Games", src:"Amazon", ship:"fast",
-     why:"Folding magnetic board — great quiet gift for a young chess fan.", url:"#"},
-    {name:"Glass Chess Board, Deluxe", emoji:"♛", price:39, cat:"Toys & Games", src:"eBay", ship:"cheap",
-     why:"Elegant gift-grade set for older players and collectors.", url:"#"},
-    {name:"3-in-1 Wood Game Box", emoji:"🎲", price:18, cat:"Toys & Games", src:"AliExpress", ship:"cheap",
-     why:"Chess, checkers, backgammon — best value for casual play.", url:"#"},
-    {name:"Mini LED Desk Lamp", emoji:"💡", price:14, cat:"Home & Kitchen", src:"AliExpress", ship:"cheap",
+    {name:"Wooden Travel Chess Set", emoji:"♟️", img:"", price:24, cat:"Toys & Games", src:"Amazon", ship:"fast",
+     badge:"seller", rating:4.6, reviews:1284, why:"Folding magnetic board — great quiet gift for a young chess fan.", url:"#"},
+    {name:"Glass Chess Board, Deluxe", emoji:"♛", img:"", price:39, cat:"Toys & Games", src:"eBay", ship:"cheap",
+     badge:"editor", rating:4.4, reviews:312, why:"Elegant gift-grade set for older players and collectors.", url:"#"},
+    {name:"3-in-1 Wood Game Box", emoji:"🎲", img:"", price:18, cat:"Toys & Games", src:"AliExpress", ship:"cheap",
+     badge:"value", rating:4.2, reviews:876, why:"Chess, checkers, backgammon — best value for casual play.", url:"#"},
+    {name:"Mini LED Desk Lamp", emoji:"💡", img:"", price:14, cat:"Home & Kitchen", src:"AliExpress", ship:"cheap",
      why:"Warm dimmable light, popular budget desk upgrade.", url:"#"},
-    {name:"Bluetooth Earbuds (ANC)", emoji:"🎧", price:46, cat:"Electronics", src:"Amazon", ship:"fast",
+    {name:"Bluetooth Earbuds (ANC)", emoji:"🎧", img:"", price:46, cat:"Electronics", src:"Amazon", ship:"fast",
      why:"Active noise cancelling for the price of basic buds.", url:"#"},
-    {name:"Pour-Over Coffee Kit", emoji:"☕", price:28, cat:"Home & Kitchen", src:"eBay", ship:"fast",
+    {name:"Pour-Over Coffee Kit", emoji:"☕", img:"", price:28, cat:"Home & Kitchen", src:"eBay", ship:"fast",
      why:"Glass carafe + reusable filter — a tidy gift bundle.", url:"#"},
-    {name:"Acrylic Paint Set, 24 colors", emoji:"🎨", price:21, cat:"Hobby & Crafts", src:"AliExpress", ship:"cheap",
+    {name:"Acrylic Paint Set, 24 colors", emoji:"🎨", img:"", price:21, cat:"Hobby & Crafts", src:"AliExpress", ship:"cheap",
      why:"Beginner-friendly starter set with brushes included.", url:"#"},
-    {name:"Compact Camping Lantern", emoji:"🏕️", price:17, cat:"Outdoors", src:"eBay", ship:"cheap",
+    {name:"Compact Camping Lantern", emoji:"🏕️", img:"", price:17, cat:"Outdoors", src:"eBay", ship:"cheap",
      why:"USB-rechargeable, collapsible — light and cheap.", url:"#"},
-    {name:"Stainless Insulated Bottle", emoji:"🍶", price:22, cat:"Outdoors", src:"Amazon", ship:"fast",
+    {name:"Stainless Insulated Bottle", emoji:"🍶", img:"", price:22, cat:"Outdoors", src:"Amazon", ship:"fast",
      why:"Keeps drinks cold 24h — reliable everyday gift.", url:"#"},
-    {name:"Skincare Gift Trio", emoji:"🧴", price:33, cat:"Health & Beauty", src:"eBay", ship:"fast",
+    {name:"Skincare Gift Trio", emoji:"🧴", img:"", price:33, cat:"Health & Beauty", src:"eBay", ship:"fast",
      why:"Cleanser, serum, moisturizer in a giftable box.", url:"#"}
   ];
 
-  // ============================================================
-  //  SALE OF THE WEEK  — EDIT THIS LIST EACH WEEK
-  //  Put in REAL deals you've verified on the store. Fields:
-  //    name = product name
-  //    was  = original price (number)
-  //    now  = sale price (number)        --> % off is calculated for you
-  //    src  = "Amazon" | "eBay" | "AliExpress"
-  //    emoji= a relevant icon
-  //    url  = the real product/affiliate link (paste between the quotes)
-  //  To remove a deal, delete its { ... } block. Keep commas between blocks.
-  // ============================================================
-  const DEALS = [
-    {name:"Wireless Earbuds, ANC", was:79, now:46, src:"Amazon",     emoji:"🎧", url:"#"},
-    {name:"Robot Vacuum Cleaner",  was:199, now:129, src:"eBay",     emoji:"🤖", url:"#"},
-    {name:"14-pc Knife Block Set",  was:60, now:34, src:"Amazon",     emoji:"🔪", url:"#"},
-    {name:"LED Strip Lights 10m",   was:25, now:12, src:"AliExpress", emoji:"💡", url:"#"}
-  ];
-
-  function renderDeals(){
-    const wrap = document.getElementById("deals");
-    if(!DEALS.length){ wrap.innerHTML = ""; return; }
-    wrap.innerHTML = DEALS.map(d => {
-      const off = d.was > 0 ? Math.round((1 - d.now / d.was) * 100) : 0;
-      return `
-      <article class="deal">
-        ${off>0?`<span class="badge">-${off}%</span>`:""}
-        <div class="thumb">${d.emoji}</div>
-        <div class="body">
-          <div class="name">${d.name}</div>
-          <div class="prices"><span class="now">$${d.now}</span><span class="was">$${d.was}</span></div>
-          <div class="src">${d.src}</div>
-          <a class="grab" href="${d.url}" target="_blank" rel="noopener">Grab deal</a>
-        </div>
-      </article>`;
-    }).join("");
-  }
-  renderDeals();
-
   // ---- Platform deep-link builders. AFF tags go here later. ----
   // Replace the empty tag values with your real affiliate IDs when approved.
-  const AFF = { amazon:"", ebay:"", aliexpress:"", temu:"" };
+  const AFF = { amazon:"", ebay:"", aliexpress:"" };
   function linkFor(platform, term, minP, maxP){
     const q = encodeURIComponent(term || "gift");
     const hasMin = minP > 0;
@@ -349,15 +419,10 @@
         return u;
       }
       case "AliExpress": {
-        let u = `https://www.aliexpress.com/wholesale?SearchText=${q}`;
-        if(hasMin) u += `&minPrice=${minP}`;
-        if(hasMax) u += `&maxPrice=${maxP}`;
-        if(AFF.aliexpress) u += `&aff=${AFF.aliexpress}`;
-        return u;
-      }
-      case "Temu": {
-        let u = `https://www.temu.com/search_result.html?search_key=${q}`;
-        if(AFF.temu) u += `&_x_aff=${AFF.temu}`;
+        // Current AliExpress search format: /w/wholesale-<term-with-hyphens>.html
+        const slug = (term || "gift").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+        let u = `https://www.aliexpress.com/w/wholesale-${slug}.html`;
+        if(AFF.aliexpress) u += `?aff=${AFF.aliexpress}`;
         return u;
       }
       default: return "#";
@@ -398,32 +463,60 @@
     $("results").scrollIntoView({behavior:"smooth", block:"start"});
   }
 
+  // Map a product's badge type to a small styled tag. Leave badge empty for none.
+  // Supported: "value" (Best Value), "seller" (Best Seller), "editor" (Editor's Choice)
+  function badgeHTML(type){
+    const map = {
+      value:  {t:"Best Value",       c:"badge-value"},
+      seller: {t:"Best Seller",      c:"badge-seller"},
+      editor: {t:"Editor's Choice",  c:"badge-editor"},
+      ship:   {t:"Free Shipping",    c:"badge-ship"}
+    };
+    const b = map[type];
+    return b ? `<span class="pbadge ${b.c}">${b.t}</span>` : "";
+  }
+
   function renderCards(picks){
     const wrap = $("cards");
     if(!picks.length){
       wrap.innerHTML = `<div class="empty">No curated picks fit those filters yet — try the store buttons below for live results.</div>`;
       return;
     }
-    wrap.innerHTML = picks.map(p => `
+    wrap.innerHTML = picks.map(p => {
+      // If no real affiliate link yet, fall back to a live store search for this product
+      const dest = (p.url && p.url !== "#") ? p.url : linkFor(p.src, p.name, 0, 100000);
+      return `
       <article class="card">
-        <div class="thumb">${p.emoji}</div>
+        <div class="thumb">${p.img ? `<img src="${p.img}" alt="${p.name}" loading="lazy">` : p.emoji}${badgeHTML(p.badge)}</div>
         <div class="body">
           <div class="name">${p.name}</div>
+          ${ratingHTML(p.rating, p.reviews)}
           <div class="why">${p.why}</div>
           <div class="meta">
             <span class="price">$${p.price}</span>
             <span class="src">${p.src}</span>
           </div>
-          <a class="pick" href="${p.url}" target="_blank" rel="noopener">View pick</a>
+          <a class="pick" href="${dest}" target="_blank" rel="noopener">View pick</a>
         </div>
-      </article>`).join("");
+      </article>`;
+    }).join("");
+  }
+
+  // Star rating display. Pass rating (0-5, e.g. 4.5) and reviews count.
+  // Leave rating empty/0 for no rating shown. Enter REAL numbers from the store.
+  function ratingHTML(rating, reviews){
+    if(!rating || rating <= 0) return "";
+    const rounded = Math.round(rating);
+    const stars = "★".repeat(rounded) + "☆".repeat(Math.max(0, 5 - rounded));
+    const count = reviews ? ` <span class="rcount">(${reviews.toLocaleString()})</span>` : "";
+    return `<div class="rating"><span class="stars">${stars}</span> <span class="rnum">${rating.toFixed(1)}</span>${count}</div>`;
   }
 
   function renderPlatforms(term, minP, maxP, cat){
-    let stores = ["Amazon","eBay","AliExpress","Temu"];
+    let stores = ["Amazon","eBay","AliExpress"];
     // AliExpress is mostly parts/accessories — unsuitable for full computers or phones
     if(cat === "Computers" || cat === "Mobile"){
-      stores = stores.filter(s => s !== "AliExpress" && s !== "Temu");
+      stores = stores.filter(s => s !== "AliExpress");
     }
     // Plain toggle buttons — NO checkbox elements, so nothing can auto-select them.
     // Each starts OFF (not selected). Clicking toggles selection.
@@ -461,6 +554,15 @@
   $("resetBtn").addEventListener("click", ()=>{
     $("q").value=""; $("cat").value=""; $("budget").value="0-100000"; $("ship").value="";
     $("results").hidden = true;
+  });
+  // Popular category chips: set the category dropdown and run a search
+  document.querySelectorAll(".catchip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      const cat = chip.dataset.cat;
+      $("q").value = "";
+      $("cat").value = cat;
+      search();
+    });
   });
 </script>
 </body>
