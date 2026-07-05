@@ -15,8 +15,8 @@
     --sand:#f3ede1;       /* warm page base */
     --card:#ffffff;
     --line:#e2d8c6;       /* hairline on sand */
-    --coral:#e9613f;      /* single action accent */
-    --coral-dk:#c94d2d;
+    --coral:#2E75B6;      /* Blue, Accent 5, Darker 25% */
+    --coral-dk:#255e92;   /* darker hover shade */
     --gold:#b98a2e;
     --ok:#2e7d59;
     --radius:14px;
@@ -43,7 +43,7 @@
   header.top{padding:30px 0 8px}
   .brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
   .brand .mark{
-    font-family:var(--display);font-weight:900;font-size:clamp(28px,4.5vw,44px);
+    font-family:var(--display);font-weight:900;font-size:clamp(24px,4.5vw,40px);
     letter-spacing:-.02em;color:var(--ink)
   }
   .brand .mark em{color:var(--coral);font-style:normal}
@@ -52,7 +52,7 @@
   /* ---- Hero ---- */
   .hero{padding:18px 0 6px}
   .hero h1{
-    font-family:var(--display);font-weight:600;font-size:clamp(26px,4.2vw,40px);
+    font-family:var(--display);font-weight:600;font-size:clamp(22px,4.2vw,36px);
     line-height:1.08;letter-spacing:-.02em;margin:.2em 0 .35em;max-width:18ch
   }
   .hero h1 .u{background:linear-gradient(transparent 62%, #f6d2c5 62%)}
@@ -173,8 +173,8 @@
   </header>
 
   <section class="hero">
-    <h1>Tell us the need. We find the <span class="u">right thing</span>, across every store.</h1>
-    <p class="sub">Describe who it's for and what matters to you. We suggest picks and send you straight to the best matches on Amazon, eBay and AliExpress — one search, every shelf.</p>
+    <h1>Tell us the need.<br>We find the right thing, across every store.</h1>
+    <p class="sub">Describe who it's for and what matters to you. We suggest picks and send you straight to the best matches on Amazon, eBay, AliExpress and Temu — one search, every shelf.</p>
   </section>
 
   <!-- SALE OF THE WEEK -->
@@ -327,7 +327,7 @@
 
   // ---- Platform deep-link builders. AFF tags go here later. ----
   // Replace the empty tag values with your real affiliate IDs when approved.
-  const AFF = { amazon:"", ebay:"", aliexpress:"" };
+  const AFF = { amazon:"", ebay:"", aliexpress:"", temu:"" };
   function linkFor(platform, term, minP, maxP){
     const q = encodeURIComponent(term || "gift");
     const hasMin = minP > 0;
@@ -353,6 +353,11 @@
         if(hasMin) u += `&minPrice=${minP}`;
         if(hasMax) u += `&maxPrice=${maxP}`;
         if(AFF.aliexpress) u += `&aff=${AFF.aliexpress}`;
+        return u;
+      }
+      case "Temu": {
+        let u = `https://www.temu.com/search_result.html?search_key=${q}`;
+        if(AFF.temu) u += `&_x_aff=${AFF.temu}`;
         return u;
       }
       default: return "#";
@@ -415,10 +420,10 @@
   }
 
   function renderPlatforms(term, minP, maxP, cat){
-    let stores = ["Amazon","eBay","AliExpress"];
+    let stores = ["Amazon","eBay","AliExpress","Temu"];
     // AliExpress is mostly parts/accessories — unsuitable for full computers or phones
     if(cat === "Computers" || cat === "Mobile"){
-      stores = stores.filter(s => s !== "AliExpress");
+      stores = stores.filter(s => s !== "AliExpress" && s !== "Temu");
     }
     // Plain toggle buttons — NO checkbox elements, so nothing can auto-select them.
     // Each starts OFF (not selected). Clicking toggles selection.
