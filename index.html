@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Security: restrict where content can load from. Allows Google Fonts,
+     the inline style/script this page uses, and product images over https. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src https: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Marketing Global — Compare Amazon, eBay &amp; AliExpress in seconds</title>
 <meta name="description" content="Marketing Global helps you search once and compare products across Amazon, eBay and AliExpress. Save time, find better prices, and shop with confidence.">
 <!-- Open Graph / social sharing -->
@@ -476,6 +480,19 @@
     return b ? `<span class="pbadge ${b.c}">${b.t}</span>` : "";
   }
 
+  // Security: escape any text before it enters innerHTML, to prevent XSS
+  // if product data ever comes from an API, URL, or user input.
+  function esc(s){
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  // Allow only safe http(s) URLs; block javascript: and data: URL injection.
+  function safeUrl(u){
+    const s = String(u == null ? "" : u).trim();
+    return /^https?:\/\//i.test(s) ? s : "#";
+  }
+
   function renderCards(picks){
     const wrap = $("cards");
     if(!picks.length){
@@ -484,19 +501,23 @@
     }
     wrap.innerHTML = picks.map(p => {
       // If no real affiliate link yet, fall back to a live store search for this product
-      const dest = (p.url && p.url !== "#") ? p.url : linkFor(p.src, p.name, 0, 100000);
+      const dest = safeUrl((p.url && p.url !== "#") ? p.url : linkFor(p.src, p.name, 0, 100000));
+      const price = Number(p.price) || 0;
+      const thumb = p.img
+        ? `<img src="${safeUrl(p.img)}" alt="${esc(p.name)}" loading="lazy">`
+        : esc(p.emoji);
       return `
       <article class="card">
-        <div class="thumb">${p.img ? `<img src="${p.img}" alt="${p.name}" loading="lazy">` : p.emoji}${badgeHTML(p.badge)}</div>
+        <div class="thumb">${thumb}${badgeHTML(p.badge)}</div>
         <div class="body">
-          <div class="name">${p.name}</div>
+          <div class="name">${esc(p.name)}</div>
           ${ratingHTML(p.rating, p.reviews)}
-          <div class="why">${p.why}</div>
+          <div class="why">${esc(p.why)}</div>
           <div class="meta">
-            <span class="price">$${p.price}</span>
-            <span class="src">${p.src}</span>
+            <span class="price">$${price}</span>
+            <span class="src">${esc(p.src)}</span>
           </div>
-          <a class="pick" href="${dest}" target="_blank" rel="noopener">View pick</a>
+          <a class="pick" href="${dest}" target="_blank" rel="noopener noreferrer">View pick</a>
         </div>
       </article>`;
     }).join("");
@@ -521,8 +542,8 @@
     // Plain toggle buttons — NO checkbox elements, so nothing can auto-select them.
     // Each starts OFF (not selected). Clicking toggles selection.
     const btns = stores.map(s => {
-      const url = linkFor(s, term, minP, maxP);
-      return `<button type="button" class="plat" data-url="${url}" data-on="0">${s}</button>`;
+      const url = safeUrl(linkFor(s, term, minP, maxP));
+      return `<button type="button" class="plat" data-url="${esc(url)}" data-on="0">${esc(s)}</button>`;
     }).join("");
     $("platforms").innerHTML = btns +
       `<button type="button" class="open-sel" id="openSel">Open selected ↗</button>`;
@@ -542,7 +563,7 @@
       if(!urls.length){ alert("Click at least one store first."); return; }
       urls.forEach(u => {
         const a = document.createElement("a");
-        a.href = u; a.target = "_blank"; a.rel = "noopener";
+        a.href = safeUrl(u); a.target = "_blank"; a.rel = "noopener noreferrer";
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
       });
       if(urls.length > 1){ $("popupNote").hidden = false; }
