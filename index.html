@@ -592,18 +592,18 @@
     });
     // open every selected store (or, after a block, the ones still waiting)
     openBtn.addEventListener("click", () => {
-      let blocked;
-      if(queue.length){
-        // Follow-up after a block: open just the next store, which a single click always allows
-        const next = queue.shift();
-        blocked = openTab(next.dataset.url) ? queue : [next, ...queue];
-      } else {
-        const picked = [...box.querySelectorAll('.plat[data-on="1"]')];
-        if(!picked.length){ say("Pick at least one store above, then open them.", true); return; }
-        blocked = picked.filter(b => !openTab(b.dataset.url));
-        if(!blocked.length && picked.length > 1){ say(`Opened ${picked.length} stores in new tabs.`); resetQueue(); return; }
+      // Every click tries ALL stores still waiting: the first always opens, and the rest open
+      // too once pop-ups are allowed (even if the visitor allowed them after an earlier block).
+      const followUp = queue.length > 0;
+      const pending = followUp ? queue : [...box.querySelectorAll('.plat[data-on="1"]')];
+      if(!pending.length){ say("Pick at least one store above, then open them.", true); return; }
+      const blocked = pending.filter(b => !openTab(b.dataset.url));
+      if(!blocked.length){
+        if(pending.length > 1 || followUp) say(followUp ? "All selected stores are open." : `Opened ${pending.length} stores in new tabs.`);
+        else msg.hidden = true;
+        resetQueue();
+        return;
       }
-      if(!blocked.length){ msg.hidden = true; resetQueue(); return; }
       queue = blocked;
       openBtn.textContent = `Open ${blocked[0].textContent} ↗` + (blocked.length > 1 ? ` (${blocked.length} left)` : "");
       say(POPUP_HELP, true);
