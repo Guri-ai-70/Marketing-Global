@@ -574,10 +574,18 @@
     // "Pop-ups blocked" prompt and can be detected (a blocked call returns null).
     const openTab = url => {
       const w = window.open(safeUrl(url), "_blank");
-      if(w){ try{ w.opener = null; }catch(e){} return true; }
-      return false;
+      if(w){ try{ w.opener = null; }catch(e){} }
+      return w;
     };
     const POPUP_HELP = "Your browser blocked the extra tabs. Click the pop-up icon at the right of the address bar, choose “Always allow pop-ups from this site”, and next time one click opens every store.";
+    const CLOSED_HELP = "Some store tabs were closed right after opening — usually an ad-blocker or pop-up-blocker extension. Use the button to open the rest, or allow this site in that extension.";
+
+    // Queue the stores that didn't make it and turn the button into "Open <next store>"
+    const showLeft = (left, help) => {
+      queue = left;
+      openBtn.textContent = `Open ${left[0].textContent} ↗` + (left.length > 1 ? ` (${left.length} left)` : "");
+      say(help, true);
+    };
 
     // toggle a store on/off when its button is clicked
     box.querySelectorAll(".plat").forEach(btn => {
@@ -597,16 +605,19 @@
       const followUp = queue.length > 0;
       const pending = followUp ? queue : [...box.querySelectorAll('.plat[data-on="1"]')];
       if(!pending.length){ say("Pick at least one store above, then open them.", true); return; }
-      const blocked = pending.filter(b => !openTab(b.dataset.url));
-      if(!blocked.length){
-        if(pending.length > 1 || followUp) say(followUp ? "All selected stores are open." : `Opened ${pending.length} stores in new tabs.`);
-        else msg.hidden = true;
-        resetQueue();
-        return;
-      }
-      queue = blocked;
-      openBtn.textContent = `Open ${blocked[0].textContent} ↗` + (blocked.length > 1 ? ` (${blocked.length} left)` : "");
-      say(POPUP_HELP, true);
+      const tries = pending.map(b => ({b, w: openTab(b.dataset.url)}));
+      const blocked = tries.filter(t => !t.w).map(t => t.b);
+      if(blocked.length){ showLeft(blocked, POPUP_HELP); return; }
+
+      if(pending.length > 1 || followUp) say(followUp ? "All selected stores are open." : `Opened ${pending.length} stores in new tabs.`);
+      else msg.hidden = true;
+      resetQueue();
+
+      // Some extensions let the tab open, then close it at once — re-check shortly after
+      setTimeout(() => {
+        const closed = tries.filter(t => { try{ return t.w.closed; }catch(e){ return false; } }).map(t => t.b);
+        if(closed.length && !queue.length) showLeft(closed, CLOSED_HELP);
+      }, 1200);
     });
   }
 
