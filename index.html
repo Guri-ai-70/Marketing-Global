@@ -200,20 +200,13 @@
   .handoff p{margin:0 0 14px;color:var(--ink-soft);font-size:14px}
   .platforms{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .plat{
-    border:1px solid var(--line);border-radius:10px;padding:11px 18px;
-    font-weight:700;color:#0a1626;background:var(--card);
-    font-size:14px;cursor:pointer;user-select:none;transition:border-color .15s ease, background .15s ease, color .15s ease
+    display:inline-block;text-decoration:none;border-radius:10px;padding:12px 20px;
+    font-weight:600;font-size:14px;color:#fff;background:var(--coral);
+    transition:background .15s ease
   }
-  .plat:hover{border-color:var(--coral)}
-  .plat.checked{border-color:#4a6076;background:#4a6076;color:#fff}
-  .plat.checked::before{content:"✓ ";font-weight:700}
-  .open-sel{
-    border:none;cursor:pointer;font:inherit;font-weight:600;font-size:14px;border-radius:10px;
-    padding:12px 20px;background:var(--coral);color:#fff;transition:background .15s ease
-  }
-  .open-sel:hover{background:var(--coral-dk)}
-  .handoff .msg{margin:12px 0 0;font-size:13px;color:var(--ink-soft)}
-  .handoff .msg.warn{color:#9a3b1e;font-weight:500}
+  .plat:hover{background:var(--coral-dk)}
+  .plat.visited{background:#4a6076}
+  .plat.visited::before{content:"✓ "}
 
   .empty{grid-column:1/-1;color:var(--ink-soft);padding:30px;text-align:center;border:1px dashed var(--line);border-radius:var(--radius);background:#fffdf8}
   .empty strong{color:var(--ink)}
@@ -318,9 +311,8 @@
 
     <div class="handoff">
       <h3>Want more options?</h3>
-      <p>Click the stores you want (they highlight when selected), then press <em>Open selected</em> to search them all for <strong id="handoffTerm">your search</strong>. Your affiliate tag attaches automatically once programs are approved.</p>
+      <p>Search each store for <strong id="handoffTerm">your search</strong>. Every button opens that store's live results in a new tab. Your affiliate tag attaches automatically once programs are approved.</p>
       <div class="platforms" id="platforms"></div>
-      <p class="msg" id="handoffMsg" hidden></p>
     </div>
   </section>
 
@@ -474,7 +466,6 @@
     renderPlatforms(term, minP, maxP, cat);
     $("handoffTerm").textContent = `"${term}"`;
     $("count").textContent = picks.length ? `${picks.length} curated match${picks.length>1?"es":""}` : "No curated matches yet";
-    $("handoffMsg").hidden = true;
     $("results").hidden = false;
     $("results").scrollIntoView({behavior:"smooth", block:"start"});
   }
@@ -551,74 +542,15 @@
     if(cat === "Computers" || cat === "Mobile"){
       stores = stores.filter(s => s !== "AliExpress");
     }
-    // Plain toggle buttons — NO checkbox elements, so nothing can auto-select them.
-    // Each starts OFF (not selected). Clicking toggles selection.
-    const btns = stores.map(s => {
+    // One real link per store. Opening several tabs from a single click is blocked by
+    // browsers and pop-up/ad-blocker extensions, so each store gets its own click — a plain
+    // link is never treated as a pop-up. Visited stores get a check mark.
+    $("platforms").innerHTML = stores.map(s => {
       const url = safeUrl(linkFor(s, term, minP, maxP));
-      return `<button type="button" class="plat" data-url="${esc(url)}" data-on="0" aria-pressed="false">${esc(s)}</button>`;
+      return `<a class="plat" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Search ${esc(s)} ↗</a>`;
     }).join("");
-    $("platforms").innerHTML = btns +
-      `<button type="button" class="open-sel" id="openSel">Open selected ↗</button>`;
-
-    const box = $("platforms");
-    const openBtn = $("openSel");
-    const msg = $("handoffMsg");
-    const say = (text, warn) => { msg.textContent = text; msg.classList.toggle("warn", !!warn); msg.hidden = false; };
-
-    // One click tries to open every selected store. Browsers let the first tab through and treat
-    // the rest as pop-ups: once the visitor allows pop-ups for this site, all of them open.
-    // Any store that was blocked stays queued, and the button turns into "Open <store>".
-    let queue = [];
-    const resetQueue = () => { queue = []; openBtn.textContent = "Open selected ↗"; };
-    // window.open (not a synthetic link click) so blocked tabs trigger the browser's
-    // "Pop-ups blocked" prompt and can be detected (a blocked call returns null).
-    const openTab = url => {
-      const w = window.open(safeUrl(url), "_blank");
-      if(w){ try{ w.opener = null; }catch(e){} }
-      return w;
-    };
-    const POPUP_HELP = "Your browser blocked the extra tabs. Click the pop-up icon at the right of the address bar, choose “Always allow pop-ups from this site”, and next time one click opens every store.";
-    const CLOSED_HELP = "Some store tabs were closed right after opening — usually an ad-blocker or pop-up-blocker extension. Use the button to open the rest, or allow this site in that extension.";
-
-    // Queue the stores that didn't make it and turn the button into "Open <next store>"
-    const showLeft = (left, help) => {
-      queue = left;
-      openBtn.textContent = `Open ${left[0].textContent} ↗` + (left.length > 1 ? ` (${left.length} left)` : "");
-      say(help, true);
-    };
-
-    // toggle a store on/off when its button is clicked
-    box.querySelectorAll(".plat").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const on = btn.dataset.on === "1";
-        btn.dataset.on = on ? "0" : "1";
-        btn.classList.toggle("checked", !on);
-        btn.setAttribute("aria-pressed", String(!on));
-        resetQueue();
-        msg.hidden = true;
-      });
-    });
-    // open every selected store (or, after a block, the ones still waiting)
-    openBtn.addEventListener("click", () => {
-      // Every click tries ALL stores still waiting: the first always opens, and the rest open
-      // too once pop-ups are allowed (even if the visitor allowed them after an earlier block).
-      const followUp = queue.length > 0;
-      const pending = followUp ? queue : [...box.querySelectorAll('.plat[data-on="1"]')];
-      if(!pending.length){ say("Pick at least one store above, then open them.", true); return; }
-      const tries = pending.map(b => ({b, w: openTab(b.dataset.url)}));
-      const blocked = tries.filter(t => !t.w).map(t => t.b);
-      if(blocked.length){ showLeft(blocked, POPUP_HELP); return; }
-
-      if(pending.length > 1 || followUp) say(followUp ? "All selected stores are open." : `Opened ${pending.length} stores in new tabs.`);
-      else msg.hidden = true;
-      resetQueue();
-
-      // Some extensions let the tab open, then close it at once — re-check shortly after
-      setTimeout(() => {
-        const closed = tries.filter(t => { try{ return t.w.closed; }catch(e){ return false; } }).map(t => t.b);
-        if(closed.length && !queue.length) showLeft(closed, CLOSED_HELP);
-      }, 1200);
-    });
+    $("platforms").querySelectorAll(".plat").forEach(a =>
+      a.addEventListener("click", () => a.classList.add("visited")));
   }
 
   $("findBtn").addEventListener("click", search);
@@ -626,7 +558,6 @@
   $("resetBtn").addEventListener("click", ()=>{
     $("q").value=""; $("cat").value=""; $("budget").value="0-100000"; $("ship").value="";
     $("results").hidden = true;
-    $("handoffMsg").hidden = true;
     document.querySelectorAll(".catchip").forEach(c => c.setAttribute("aria-pressed","false"));
     $("q").focus();
   });
