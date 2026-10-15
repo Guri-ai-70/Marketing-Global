@@ -208,10 +208,10 @@
   .plat.checked{border-color:#4a6076;background:#4a6076;color:#fff}
   .plat.checked::before{content:"✓ ";font-weight:700}
   .open-sel{
-    border:none;cursor:pointer;font:inherit;font-weight:600;border-radius:10px;
-    padding:11px 20px;background:#3a4d61;color:#fff;transition:background .15s ease
+    border:none;cursor:pointer;font:inherit;font-weight:600;font-size:14px;border-radius:10px;
+    padding:12px 20px;background:var(--coral);color:#fff;transition:background .15s ease
   }
-  .open-sel:hover{background:#2c3a49}
+  .open-sel:hover{background:var(--coral-dk)}
   .handoff .msg{margin:12px 0 0;font-size:13px;color:var(--ink-soft)}
   .handoff .msg.warn{color:#9a3b1e;font-weight:500}
 
@@ -318,7 +318,7 @@
 
     <div class="handoff">
       <h3>Want more options?</h3>
-      <p>Click the stores you want (they highlight when selected), then open them all at once for <strong id="handoffTerm">your search</strong>. Your affiliate tag attaches automatically once programs are approved.</p>
+      <p>Click the stores you want (they highlight when selected), then press <em>Open selected</em> to search them for <strong id="handoffTerm">your search</strong>, one tab per click. Your affiliate tag attaches automatically once programs are approved.</p>
       <div class="platforms" id="platforms"></div>
       <p class="msg" id="handoffMsg" hidden></p>
     </div>
@@ -561,8 +561,15 @@
       `<button type="button" class="open-sel" id="openSel">Open selected ↗</button>`;
 
     const box = $("platforms");
+    const openBtn = $("openSel");
     const msg = $("handoffMsg");
     const say = (text, warn) => { msg.textContent = text; msg.classList.toggle("warn", !!warn); msg.hidden = false; };
+
+    // Browsers allow only ONE new tab per click (extra tabs are silently blocked as pop-ups),
+    // so "Open selected" opens one store per click and relabels itself for the next one.
+    let queue = [], total = 0;
+    const resetQueue = () => { queue = []; total = 0; openBtn.textContent = "Open selected ↗"; };
+
     // toggle a store on/off when its button is clicked
     box.querySelectorAll(".plat").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -570,22 +577,28 @@
         btn.dataset.on = on ? "0" : "1";
         btn.classList.toggle("checked", !on);
         btn.setAttribute("aria-pressed", String(!on));
-        if(!on && msg.classList.contains("warn")) msg.hidden = true;
+        resetQueue();
+        msg.hidden = true;
       });
     });
-    // open every selected store
-    $("openSel").addEventListener("click", () => {
-      const urls = [...box.querySelectorAll('.plat[data-on="1"]')].map(b => b.dataset.url);
-      if(!urls.length){ say("Pick at least one store above, then open them.", true); return; }
-      urls.forEach(u => {
-        const a = document.createElement("a");
-        a.href = safeUrl(u); a.target = "_blank"; a.rel = "noopener noreferrer";
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      });
-      if(urls.length > 1){
-        say("Opening several stores? If some tabs don't appear, click the pop-up icon in your browser's address bar and allow pop-ups for this site.");
+    // open the next selected store
+    openBtn.addEventListener("click", () => {
+      if(!queue.length){
+        queue = [...box.querySelectorAll('.plat[data-on="1"]')];
+        total = queue.length;
+        if(!total){ say("Pick at least one store above, then open them.", true); return; }
+      }
+      const btn = queue.shift();
+      const a = document.createElement("a");
+      a.href = safeUrl(btn.dataset.url); a.target = "_blank"; a.rel = "noopener noreferrer";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+
+      if(queue.length){
+        openBtn.textContent = `Next: open ${queue[0].textContent} ↗ (${total - queue.length + 1} of ${total})`;
+        say(`${btn.textContent} opened in a new tab. Click again to open ${queue[0].textContent}.`);
       } else {
-        msg.hidden = true;
+        if(total > 1) say(`All ${total} stores opened in new tabs.`); else msg.hidden = true;
+        resetQueue();
       }
     });
   }
