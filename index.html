@@ -318,7 +318,7 @@
 
     <div class="handoff">
       <h3>Want more options?</h3>
-      <p>Click the stores you want (they highlight when selected), then press <em>Open selected</em> to search them for <strong id="handoffTerm">your search</strong>, one tab per click. Your affiliate tag attaches automatically once programs are approved.</p>
+      <p>Click the stores you want (they highlight when selected), then press <em>Open selected</em> to search them all for <strong id="handoffTerm">your search</strong>. Your affiliate tag attaches automatically once programs are approved.</p>
       <div class="platforms" id="platforms"></div>
       <p class="msg" id="handoffMsg" hidden></p>
     </div>
@@ -565,10 +565,19 @@
     const msg = $("handoffMsg");
     const say = (text, warn) => { msg.textContent = text; msg.classList.toggle("warn", !!warn); msg.hidden = false; };
 
-    // Browsers allow only ONE new tab per click (extra tabs are silently blocked as pop-ups),
-    // so "Open selected" opens one store per click and relabels itself for the next one.
-    let queue = [], total = 0;
-    const resetQueue = () => { queue = []; total = 0; openBtn.textContent = "Open selected ↗"; };
+    // One click tries to open every selected store. Browsers let the first tab through and treat
+    // the rest as pop-ups: once the visitor allows pop-ups for this site, all of them open.
+    // Any store that was blocked stays queued, and the button turns into "Open <store>".
+    let queue = [];
+    const resetQueue = () => { queue = []; openBtn.textContent = "Open selected ↗"; };
+    // window.open (not a synthetic link click) so blocked tabs trigger the browser's
+    // "Pop-ups blocked" prompt and can be detected (a blocked call returns null).
+    const openTab = url => {
+      const w = window.open(safeUrl(url), "_blank");
+      if(w){ try{ w.opener = null; }catch(e){} return true; }
+      return false;
+    };
+    const POPUP_HELP = "Your browser blocked the extra tabs. Click the pop-up icon at the right of the address bar, choose “Always allow pop-ups from this site”, and next time one click opens every store.";
 
     // toggle a store on/off when its button is clicked
     box.querySelectorAll(".plat").forEach(btn => {
@@ -581,25 +590,22 @@
         msg.hidden = true;
       });
     });
-    // open the next selected store
+    // open every selected store (or, after a block, the ones still waiting)
     openBtn.addEventListener("click", () => {
-      if(!queue.length){
-        queue = [...box.querySelectorAll('.plat[data-on="1"]')];
-        total = queue.length;
-        if(!total){ say("Pick at least one store above, then open them.", true); return; }
-      }
-      const btn = queue.shift();
-      const a = document.createElement("a");
-      a.href = safeUrl(btn.dataset.url); a.target = "_blank"; a.rel = "noopener noreferrer";
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      const pending = queue.length ? queue : [...box.querySelectorAll('.plat[data-on="1"]')];
+      if(!pending.length){ say("Pick at least one store above, then open them.", true); return; }
 
-      if(queue.length){
-        openBtn.textContent = `Next: open ${queue[0].textContent} ↗ (${total - queue.length + 1} of ${total})`;
-        say(`${btn.textContent} opened in a new tab. Click again to open ${queue[0].textContent}.`);
-      } else {
-        if(total > 1) say(`All ${total} stores opened in new tabs.`); else msg.hidden = true;
+      const blocked = pending.filter(b => !openTab(b.dataset.url));
+      if(!blocked.length){
+        if(pending.length > 1) say(`Opened ${pending.length} stores in new tabs.`); else msg.hidden = true;
         resetQueue();
+        return;
       }
+      queue = blocked;
+      openBtn.textContent = blocked.length === 1
+        ? `Open ${blocked[0].textContent} ↗`
+        : `Open ${blocked.length} more stores ↗`;
+      say(POPUP_HELP, true);
     });
   }
 
